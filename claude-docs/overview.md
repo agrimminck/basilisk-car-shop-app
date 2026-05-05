@@ -2,7 +2,9 @@
 
 ## Estado actual
 
-**En desarrollo.** UI deployada en Vercel para testing/desarrollo (`basilisk-car-shop-app.vercel.app`). NO en producción comercial con clientes reales. Transbank POS Integrado: arquitectura diseñada, bridge implementado, pendiente hardware físico real para testear.
+**En desarrollo.** UI deployada en Vercel para testing/desarrollo (`basilisk-car-shop-app.vercel.app`). NO en producción comercial con clientes reales.
+
+**Transbank POS Integrado: NO integrado.** Está en el roadmap. El bridge Node.js + transbank-pos-sdk existe en el código pero nunca fue testeado con hardware físico real (máquina Verifone/Ingenico). No se puede afirmar que Transbank esté integrado — es código de arquitectura preparado, nada más.
 
 ---
 
@@ -108,7 +110,7 @@ Multi-sucursal ready (branch_id en sales e inventory). UUIDs en todas las PK.
 - **Paleta**: background `#080a10`, primary cyan `#38bdf8`, accent naranja `#fb923c`, success `#34d399`, danger `#f87171`
 - **Glassmorphism**: cards y paneles con `backdrop-blur`, bordes translúcidos `white/10`, sombras sutiles
 - **Neon glows**: acentos cyan/naranja con text-shadow y box-shadow en elementos activos
-- **Imágenes**: mock data usa iconos Lucide por categoría (gotas aceite, embudo filtro, disco frenos, batería, neumático, llave servicios). Evita dependencia URLs externas rotas.
+- **Imágenes**: 15 imágenes profesionales generadas con IA (Pollinations) para cada producto/servicio del POS. Guardadas en `apps/web/public/images/products/`. Formatos JPEG 400×300, fondo oscuro, estilo taller mecánico. Fallback a iconos Lucide + gradient si `imageUrl` ausente.
 - **Scrollbar custom**: estilo fino con thumb cyan translúcido
 - **Tipografía**: Inter, pesos bold en precios y títulos
 
@@ -152,6 +154,7 @@ Regla cross-repo basilisk: cada proyecto Next.js usa puerto propio para evitar c
 - **2026-05-01** — Layout `/pos`: panel derecho (carrito) no ocupaba altura completa. Fix: wrapper cambiado a `md:flex md:flex-col`, panel izquierdo añadió `h-full`. Archivo: `apps/web/src/app/pos/page.tsx`.
 - **2026-05-01** — Margen exterior en `/pos`: app tenía `m-4` y `rounded-2xl` dejando borde oscuro alrededor. Fix: eliminado `m-4`, cambiado `h-[calc(100vh-2rem)]` a `h-screen`, eliminado `rounded-2xl`. Archivo: `apps/web/src/app/pos/page.tsx`.
 - **2026-05-01** — Imágenes mock rotas: URLs Unsplash para productos devolvían 404, productos parecían vacíos. Fix: reemplazadas por iconos Lucide representativos por categoría con fondos gradient. Archivos: `mock-data.ts`, `product-card.tsx`.
+- **2026-05-05** — Imágenes profesionales por item: generadas 15 imágenes IA locales para cada producto/servicio del POS. Agregado campo `imageUrl` a `mock-data.ts`. Imágenes en `apps/web/public/images/products/`.
 - **2026-05-01** — Acceso LAN: `next dev` solo escuchaba en localhost. Fix: añadido `-H 0.0.0.0` al script `dev` en `apps/web/package.json`.
 
 ## Migración Neon (2026-05-01)
