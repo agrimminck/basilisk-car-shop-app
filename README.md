@@ -1,5 +1,7 @@
 # Basilisk Car Shop App
 
+**Production:** https://basilisk-car-shop-app.vercel.app/pos
+
 Aplicación POS y gestión para taller mecánico con integración Transbank.
 
 ## Estructura
