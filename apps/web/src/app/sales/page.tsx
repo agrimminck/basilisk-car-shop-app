@@ -13,6 +13,7 @@ import {
   X,
 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { formatPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -256,10 +257,6 @@ const MOCK_SALES: Sale[] = [
   },
 ];
 
-function formatCurrency(amount: number): string {
-  return "$" + amount.toLocaleString("es-CL");
-}
-
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr);
   return date.toLocaleDateString("es-CL", {
@@ -338,7 +335,7 @@ export default function SalesPage() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
 
-  const now = new Date("2026-05-01T00:00:00");
+  const now = new Date();
 
   const filteredSales = useMemo(() => {
     let filtered = [...MOCK_SALES];
@@ -464,7 +461,7 @@ export default function SalesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(stats.totalSales)}
+                {formatPrice(stats.totalSales)}
               </div>
             </CardContent>
           </Card>
@@ -488,7 +485,7 @@ export default function SalesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {formatCurrency(Math.round(stats.averageTicket))}
+                {formatPrice(Math.round(stats.averageTicket))}
               </div>
             </CardContent>
           </Card>
@@ -501,9 +498,9 @@ export default function SalesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-lg font-bold">
-                {formatCurrency(stats.cardTotal)}
+                {formatPrice(stats.cardTotal)}
                 <span className="mx-1 text-muted-foreground">/</span>
-                {formatCurrency(stats.cashTotal)}
+                {formatPrice(stats.cashTotal)}
               </div>
               <p className="text-xs text-muted-foreground">Tarjeta / Efectivo</p>
             </CardContent>
@@ -563,7 +560,7 @@ export default function SalesPage() {
                             </div>
                           </td>
                           <td className="px-4 py-3 font-semibold text-foreground">
-                            {formatCurrency(sale.total)}
+                            {formatPrice(sale.total)}
                           </td>
                           <td className="px-4 py-3">
                             <Badge variant={statusBadgeVariant(sale.status)}>
@@ -667,10 +664,10 @@ export default function SalesPage() {
                         <td className="px-3 py-2">{line.description}</td>
                         <td className="px-3 py-2">{line.quantity}</td>
                         <td className="px-3 py-2">
-                          {formatCurrency(line.unitPrice)}
+                          {formatPrice(line.unitPrice)}
                         </td>
                         <td className="px-3 py-2 text-right font-medium">
-                          {formatCurrency(line.quantity * line.unitPrice)}
+                          {formatPrice(line.quantity * line.unitPrice)}
                         </td>
                       </tr>
                     ))}
@@ -693,7 +690,7 @@ export default function SalesPage() {
                         <span>{paymentMethodLabel(payment.method)}</span>
                       </div>
                       <span className="font-medium">
-                        {formatCurrency(payment.amount)}
+                        {formatPrice(payment.amount)}
                       </span>
                     </div>
                   ))}
@@ -708,7 +705,7 @@ export default function SalesPage() {
             <div className="flex items-center justify-between rounded-lg bg-muted px-4 py-3">
               <span className="font-semibold text-foreground">Total</span>
               <span className="text-lg font-bold text-primary">
-                {formatCurrency(selectedSale.total)}
+                {formatPrice(selectedSale.total)}
               </span>
             </div>
 

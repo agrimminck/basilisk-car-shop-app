@@ -1,0 +1,4 @@
+
+> @basilisk/web@0.1.0 lint /tmp/polish-car-shop-app/apps/web
+> tsc --noEmit
+

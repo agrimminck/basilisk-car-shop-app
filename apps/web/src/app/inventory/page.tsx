@@ -21,6 +21,7 @@ import {
   TabsContent,
 } from "@/components/ui/tabs";
 import { Search, Plus, Pencil, Trash2, Package } from "lucide-react";
+import { formatPrice } from "@/lib/format";
 
 /* ───────── tipos ───────── */
 
@@ -275,12 +276,6 @@ const MOCK_COMBOS: Combo[] = [
     status: "activo",
   },
 ];
-
-/* ───────── helpers ───────── */
-
-function formatPrice(value: number): string {
-  return "$" + value.toLocaleString("es-CL");
-}
 
 /* ───────── componente ───────── */
 

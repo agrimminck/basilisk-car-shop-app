@@ -24,6 +24,7 @@ import {
   Tooltip,
 } from "recharts";
 import { AppShell } from "@/components/app-shell";
+import { formatPrice } from "@/lib/format";
 import {
   Card,
   CardHeader,
@@ -71,10 +72,6 @@ const workshopServices = [
   { id: "OT-203", vehicle: "Chevrolet Spark LM-NO-56", service: "Alineación y balanceo", progress: 20, time: "2 hrs rest." },
   { id: "OT-202", vehicle: "Hyundai Tucson PQ-RS-78", service: "Cambio correa distribución", progress: 60, time: "1 hr rest." },
 ];
-
-function formatCLP(value: number) {
-  return "$" + value.toLocaleString("es-CL");
-}
 
 const container = {
   hidden: { opacity: 0 },
@@ -136,7 +133,7 @@ export default function DashboardPage() {
               <DollarSign className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent className="relative">
-              <CardTitle className="text-3xl">{formatCLP(1245000)}</CardTitle>
+              <CardTitle className="text-3xl">{formatPrice(1245000)}</CardTitle>
               <p className="mt-1 flex items-center text-xs text-success">
                 <TrendingUp className="mr-1 h-3 w-3" /> +12.5% vs ayer
               </p>
@@ -178,7 +175,7 @@ export default function DashboardPage() {
               <DollarSign className="h-4 w-4 text-accent" />
             </CardHeader>
             <CardContent className="relative">
-              <CardTitle className="text-3xl">{formatCLP(18450000)}</CardTitle>
+              <CardTitle className="text-3xl">{formatPrice(18450000)}</CardTitle>
               <p className="mt-1 flex items-center text-xs text-success">
                 <TrendingUp className="mr-1 h-3 w-3" /> +8.2% vs mes ant.
               </p>
@@ -223,7 +220,7 @@ export default function DashboardPage() {
                             borderRadius: "0.75rem",
                             backdropFilter: "blur(10px)",
                           }}
-                          formatter={(value: number) => [formatCLP(value), "Monto"]}
+                          formatter={(value: number) => [formatPrice(value), "Monto"]}
                           labelStyle={{ color: "#94a3b8" }}
                         />
                         <Area
@@ -261,7 +258,7 @@ export default function DashboardPage() {
                             <td className="py-3 pr-4 text-primary font-medium">{s.id}</td>
                             <td className="py-3 pr-4">{s.customer}</td>
                             <td className="py-3 pr-4 text-muted-foreground">{s.time}</td>
-                            <td className="py-3 text-right font-bold">{formatCLP(s.total)}</td>
+                            <td className="py-3 text-right font-bold">{formatPrice(s.total)}</td>
                           </tr>
                         ))}
                       </tbody>

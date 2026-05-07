@@ -18,6 +18,11 @@ export function formatDate(date: string): string {
   return `${day}/${month}/${year}`;
 }
 
+/** Simple CLP formatter: "$1.234.567" without "CLP" symbol */
+export function formatPrice(amount: number): string {
+  return "$" + amount.toLocaleString("es-CL");
+}
+
 export function formatRut(rut: string): string {
   const clean = rut.replace(/[^0-9kK]/g, "");
   if (clean.length < 2) return clean;

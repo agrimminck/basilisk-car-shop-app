@@ -13,7 +13,7 @@ export interface PosStatus {
 }
 
 export interface SaleResult {
-  operationId: string;
+  operationId: number;
   ticket: string;
   amount: number;
   authorizationCode?: string;
@@ -69,7 +69,7 @@ export async function createSale(
 }
 
 export async function refund(
-  operationId: string
+  operationId: number
 ): Promise<BridgeResponse<SaleResult>> {
   return bridgeFetch<SaleResult>("/api/pos/refund", {
     method: "POST",

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Wrench, Plus, Clock, DollarSign, FileText } from "lucide-react";
+import { formatPrice } from "@/lib/format";
 
 interface Service {
   id: string;
@@ -97,7 +98,7 @@ export default function ServicesPage() {
             <CardContent className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <DollarSign className="h-4 w-4 text-primary" />
-                <span className="font-medium text-foreground">${service.price.toLocaleString("es-CL")}</span>
+                <span className="font-medium text-foreground">{formatPrice(service.price)}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4 text-accent" />

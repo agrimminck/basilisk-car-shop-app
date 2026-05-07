@@ -43,10 +43,9 @@ export default function PosPage() {
     setPaymentOpen(true);
   }, []);
 
-  const handleConfirmPayment = useCallback((method: PaymentMethod) => {
-    console.log("Pago confirmado:", method, "Total:", total);
+  const handleConfirmPayment = useCallback((_method: PaymentMethod) => {
     setCartItems([]);
-  }, [total]);
+  }, []);
 
   return (
     <AppShell>

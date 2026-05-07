@@ -36,9 +36,10 @@ Tablet/Desktop táctil (mostrador)
     │  Web    │  Next.js 16 → http://localhost:3002
     │  App    │
     └────┬────┘
-         │ Supabase JS client
+         │ fetch /api/* (Next.js API Routes)
          ▼
-    Supabase (PostgreSQL)
+    Neon (PostgreSQL serverless)
+    schema: car_shop_app, ORM: Drizzle
          ▲
          │ HTTP localhost:8090
     ┌────┴────┐
@@ -54,19 +55,20 @@ Bridge corre en misma PC del mostrador. Frontend accesible desde tablet o navega
 ```
 basilisk-car-shop-app/
 ├── apps/
-│   ├── web/                # Next.js 15 frontend
+│   ├── web/                # Next.js 16 frontend
 │   │   ├── src/app/        # Rutas: /pos, /dashboard, /inventory, /customers, /sales, /services, /settings
+│   │   ├── src/app/api/    # products/route.ts (GET), sales/route.ts (GET+POST)
 │   │   ├── src/components/ # UI base + POS components
-│   │   ├── src/hooks/      # use-pos-store.ts
-│   │   ├── src/lib/        # api/bridge.ts, api/supabase.ts, format.ts, utils.ts
+│   │   ├── src/hooks/      # use-pos-store.ts (Zustand cart)
+│   │   ├── src/lib/        # api/bridge.ts, api/supabase.ts (API fetchers), db.ts, schema.ts (Drizzle), format.ts, utils.ts
 │   │   └── ...
 │   └── bridge/             # Express API local
 │       └── src/index.ts    # Endpoints /api/pos/*
 ├── packages/
-│   └── types/              # Database types (Supabase schema)
-├── supabase/migrations/
-│   ├── 0001_schema.sql     # Tablas completas
-│   └── 0002_seed.sql       # Datos de ejemplo
+│   └── types/              # Legacy Supabase-style type definitions (snapshot; not used by web app — uses Drizzle inferred types)
+├── supabase/migrations/    # SQL schema + seed (referencia; app usa Drizzle, no supabase-cli)
+│   ├── 0001_schema.sql
+│   └── 0002_seed.sql
 └── README.md
 ```
 
@@ -204,6 +206,14 @@ Configuración monorepo pnpm + Vercel:
 - `vercel.json` debe ir en `apps/web/`, no en raíz del monorepo (Vercel lo lee desde rootDirectory)
 
 Proyecto Vercel: `agrimmincks-projects/basilisk-car-shop-app` (`prj_jhgngSn47MQ1W7KyPcjC3zx3MLwH`)
+
+## Deuda técnica conocida
+
+- **Deps huérfanas** en `apps/web/package.json`: `@hookform/resolvers`, `react-hook-form`, `zod`, `@tanstack/react-query` instalados pero sin uso en ningún archivo fuente. Candidatos a remover cuando se confirme que no serán usados.
+- **Tipo mismatch Transbank bridge**: `src/lib/api/bridge.ts` envía `operationId: string` en refund, pero `apps/bridge/src/index.ts` espera `{ operationId: number }`. Corregir cuando se integre hardware real.
+- **`packages/types`**: tipos Supabase-style legacy. Web app usa tipos Drizzle. Unificar o eliminar en siguiente iteración.
+- **`usePosStore`** (Zustand) existe con lógica completa de carrito, pero `pos/page.tsx` usa `useState` local paralelo. Migrar a store compartido cuando se implemente historial de carro o multi-sesión.
+- **ESLint config** faltaba — agregado `eslint.config.mjs` en `apps/web/` (2026-05-07 polish).
 
 ## Estado
 
