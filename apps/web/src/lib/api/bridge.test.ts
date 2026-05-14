@@ -97,7 +97,7 @@ describe("bridge client api", () => {
     );
   });
 
-  it("closeDay: posts to /api/pos/close endpoint", async () => {
+  it("closeDay: posts to /api/pos/close-day endpoint (matches bridge route)", async () => {
     vi.stubGlobal(
       "fetch",
       mockFetch({ ok: true, body: { closed: true } }) as unknown as typeof fetch
@@ -107,7 +107,7 @@ describe("bridge client api", () => {
 
     expect(res.success).toBe(true);
     expect(fetch).toHaveBeenCalledWith(
-      "http://localhost:8090/api/pos/close",
+      "http://localhost:8090/api/pos/close-day",
       expect.objectContaining({ method: "POST" })
     );
   });

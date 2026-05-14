@@ -123,6 +123,25 @@ export const bundles = pgTable("bundles", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 
+export const saleLines = pgTable("sale_lines", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  saleId: uuid("sale_id").notNull(),
+  lineType: text("line_type").notNull(),
+  variantId: uuid("variant_id"),
+  serviceId: uuid("service_id"),
+  bundleId: uuid("bundle_id"),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 12, scale: 3 })
+    .default("1")
+    .notNull(),
+  unitPrice: decimal("unit_price", { precision: 12, scale: 2 }).notNull(),
+  discountAmount: decimal("discount_amount", { precision: 12, scale: 2 }).default(
+    "0"
+  ),
+  totalLine: decimal("total_line", { precision: 12, scale: 2 }).notNull(),
+  mechanicId: uuid("mechanic_id"),
+});
+
 export const sales = pgTable("sales", {
   id: uuid("id").defaultRandom().primaryKey(),
   branchId: uuid("branch_id").notNull(),

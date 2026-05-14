@@ -78,7 +78,7 @@ export async function refund(
 }
 
 export async function closeDay(): Promise<BridgeResponse<{ closed: boolean }>> {
-  return bridgeFetch<{ closed: boolean }>("/api/pos/close", {
+  return bridgeFetch<{ closed: boolean }>("/api/pos/close-day", {
     method: "POST",
   });
 }

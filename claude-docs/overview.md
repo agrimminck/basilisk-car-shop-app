@@ -213,7 +213,7 @@ Proyecto Vercel: `agrimmincks-projects/basilisk-car-shop-app` (`prj_jhgngSn47MQ1
 - **Tipo Transbank bridge operationId**: verificado 2026-05-14 — ambos lados (`apps/web/src/lib/api/bridge.ts` + `apps/bridge/src/index.ts`) usan `number`. Canonical: `number` (matches SDK signature `pos.refund(operationId: number)`). Mismatch resuelto.
 - **`packages/types`**: tipos Supabase-style legacy. Web app usa tipos Drizzle inferred. Unificar o eliminar siguiente iteración.
 - **`usePosStore` (Zustand) vs `useState` split** [FLAGGED medium — decisión arquitectural pendiente]: store Zustand existe con persist localStorage + lógica carrito completa, pero `apps/web/src/app/pos/page.tsx` usa `useState` local paralelo. Decidir antes de implementar: historial carrito, multi-sesión, persist resume tras reload. Opciones: (a) migrar todo a Zustand, (b) eliminar Zustand y declarar `useState` único, (c) split formal (Zustand solo persist, useState UI ephemeral). No tocado en polish — requiere input usuario.
-- **Sales API NO decrementa inventory** [FLAGGED bug]: `apps/web/src/app/api/sales/route.ts` POST sólo inserta `sales` row, no toca `inventory` ni `sale_lines`. Venta no reduce stock real. Pendiente implementar transaction Drizzle: insert sale + insert sale_lines + decrement inventory atómico.
+- **Sales API atomic POST** [FIXED 2026-05-14]: `apps/web/src/app/api/sales/route.ts` POST ahora envuelve insert `sales` + bulk insert `sale_lines` + decrement `inventory` (UPDATE ... WHERE quantity >= qty, verifica 1 row affected) en `db.transaction`. Stock insuficiente → 409 + rollback completo. Driver migrado de `drizzle-orm/neon-http` → `drizzle-orm/neon-serverless` (Pool) porque neon-http no soporta multi-statement tx. Schema Drizzle extendido con `saleLines` (tabla SQL ya existía en `supabase/migrations/0001_schema.sql`). Specs cobertura: happy path + insufficient stock first/second line + validation 400 + db error propagation.
 - **ESLint config** agregado `eslint.config.mjs` en `apps/web/` (2026-05-07 polish).
 - **`as any` en product-card.tsx**: removido 2026-05-14, tipado via `BadgeProps["variant"]`.
 
@@ -222,7 +222,7 @@ Proyecto Vercel: `agrimmincks-projects/basilisk-car-shop-app` (`prj_jhgngSn47MQ1
 - product-card.tsx: `stockVariant` tipado con `BadgeProps["variant"]`, eliminado `as any`.
 - Docs sincronizado con código real (deps + operationId).
 - Bridge code core NO tocado (hardware untested per regla).
-- Flagged: Zustand/useState split (medium), sales POST no decrementa inventory (bug).
+- Flagged: Zustand/useState split (medium). Sales POST atomic inventory: FIXED 2026-05-14.
 
 ## Estado
 
