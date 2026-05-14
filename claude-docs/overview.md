@@ -209,11 +209,20 @@ Proyecto Vercel: `agrimmincks-projects/basilisk-car-shop-app` (`prj_jhgngSn47MQ1
 
 ## Deuda técnica conocida
 
-- **Deps huérfanas** en `apps/web/package.json`: `@hookform/resolvers`, `react-hook-form`, `zod`, `@tanstack/react-query` instalados pero sin uso en ningún archivo fuente. Candidatos a remover cuando se confirme que no serán usados.
-- **Tipo mismatch Transbank bridge**: `src/lib/api/bridge.ts` envía `operationId: string` en refund, pero `apps/bridge/src/index.ts` espera `{ operationId: number }`. Corregir cuando se integre hardware real.
-- **`packages/types`**: tipos Supabase-style legacy. Web app usa tipos Drizzle. Unificar o eliminar en siguiente iteración.
-- **`usePosStore`** (Zustand) existe con lógica completa de carrito, pero `pos/page.tsx` usa `useState` local paralelo. Migrar a store compartido cuando se implemente historial de carro o multi-sesión.
-- **ESLint config** faltaba — agregado `eslint.config.mjs` en `apps/web/` (2026-05-07 polish).
+- **Deps huérfanas**: verificado 2026-05-14 — `apps/web/package.json` ya NO contiene `@hookform/resolvers`, `react-hook-form`, `zod`, `@tanstack/react-query`. Limpio.
+- **Tipo Transbank bridge operationId**: verificado 2026-05-14 — ambos lados (`apps/web/src/lib/api/bridge.ts` + `apps/bridge/src/index.ts`) usan `number`. Canonical: `number` (matches SDK signature `pos.refund(operationId: number)`). Mismatch resuelto.
+- **`packages/types`**: tipos Supabase-style legacy. Web app usa tipos Drizzle inferred. Unificar o eliminar siguiente iteración.
+- **`usePosStore` (Zustand) vs `useState` split** [FLAGGED medium — decisión arquitectural pendiente]: store Zustand existe con persist localStorage + lógica carrito completa, pero `apps/web/src/app/pos/page.tsx` usa `useState` local paralelo. Decidir antes de implementar: historial carrito, multi-sesión, persist resume tras reload. Opciones: (a) migrar todo a Zustand, (b) eliminar Zustand y declarar `useState` único, (c) split formal (Zustand solo persist, useState UI ephemeral). No tocado en polish — requiere input usuario.
+- **Sales API NO decrementa inventory** [FLAGGED bug]: `apps/web/src/app/api/sales/route.ts` POST sólo inserta `sales` row, no toca `inventory` ni `sale_lines`. Venta no reduce stock real. Pendiente implementar transaction Drizzle: insert sale + insert sale_lines + decrement inventory atómico.
+- **ESLint config** agregado `eslint.config.mjs` en `apps/web/` (2026-05-07 polish).
+- **`as any` en product-card.tsx**: removido 2026-05-14, tipado via `BadgeProps["variant"]`.
+
+## Polish 2026-05-14
+
+- product-card.tsx: `stockVariant` tipado con `BadgeProps["variant"]`, eliminado `as any`.
+- Docs sincronizado con código real (deps + operationId).
+- Bridge code core NO tocado (hardware untested per regla).
+- Flagged: Zustand/useState split (medium), sales POST no decrementa inventory (bug).
 
 ## Estado
 
