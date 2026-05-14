@@ -1,21 +1,21 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { CartItem } from "./types";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { Minus, Plus, Trash2, ShoppingCart, Zap } from "lucide-react";
+import { usePosStore } from "@/hooks/use-pos-store";
 
-interface CartPanelProps {
-  items: CartItem[];
-  onUpdateQuantity: (productId: string, delta: number) => void;
-  onRemove: (productId: string) => void;
-  onPay: () => void;
-}
+export function CartPanel() {
+  const items = usePosStore((s) => s.items);
+  const updateQuantity = usePosStore((s) => s.updateQuantity);
+  const removeItem = usePosStore((s) => s.removeItem);
+  const setPaymentOpen = usePosStore((s) => s.setPaymentOpen);
 
-export function CartPanel({ items, onUpdateQuantity, onRemove, onPay }: CartPanelProps) {
-  const total = items.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
+  const total = items.reduce(
+    (sum, item) => sum + item.product.price * item.quantity,
+    0
+  );
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
@@ -66,7 +66,7 @@ export function CartPanel({ items, onUpdateQuantity, onRemove, onPay }: CartPane
                   </p>
                 </div>
                 <button
-                  onClick={() => onRemove(item.product.id)}
+                  onClick={() => removeItem(item.product.id)}
                   className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-danger/20 hover:text-danger"
                   aria-label="Eliminar item"
                 >
@@ -76,7 +76,7 @@ export function CartPanel({ items, onUpdateQuantity, onRemove, onPay }: CartPane
 
               <div className="mt-2 flex items-center gap-3">
                 <button
-                  onClick={() => onUpdateQuantity(item.product.id, -1)}
+                  onClick={() => updateQuantity(item.product.id, -1)}
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-foreground transition-colors hover:bg-white/10 active:scale-95"
                   aria-label="Disminuir cantidad"
                 >
@@ -86,7 +86,7 @@ export function CartPanel({ items, onUpdateQuantity, onRemove, onPay }: CartPane
                   {item.quantity}
                 </span>
                 <button
-                  onClick={() => onUpdateQuantity(item.product.id, 1)}
+                  onClick={() => updateQuantity(item.product.id, 1)}
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-foreground transition-colors hover:bg-white/10 active:scale-95"
                   aria-label="Aumentar cantidad"
                 >
@@ -114,7 +114,7 @@ export function CartPanel({ items, onUpdateQuantity, onRemove, onPay }: CartPane
           </motion.span>
         </div>
         <Button
-          onClick={onPay}
+          onClick={() => setPaymentOpen(true)}
           disabled={items.length === 0}
           className="h-14 w-full rounded-xl bg-success text-base font-bold text-white hover:bg-success/90 disabled:opacity-40 shadow-lg shadow-success/20"
         >

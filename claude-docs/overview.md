@@ -212,7 +212,7 @@ Proyecto Vercel: `agrimmincks-projects/basilisk-car-shop-app` (`prj_jhgngSn47MQ1
 - **Deps huérfanas**: verificado 2026-05-14 — `apps/web/package.json` ya NO contiene `@hookform/resolvers`, `react-hook-form`, `zod`, `@tanstack/react-query`. Limpio.
 - **Tipo Transbank bridge operationId**: verificado 2026-05-14 — ambos lados (`apps/web/src/lib/api/bridge.ts` + `apps/bridge/src/index.ts`) usan `number`. Canonical: `number` (matches SDK signature `pos.refund(operationId: number)`). Mismatch resuelto.
 - **`packages/types`**: tipos Supabase-style legacy. Web app usa tipos Drizzle inferred. Unificar o eliminar siguiente iteración.
-- **`usePosStore` (Zustand) vs `useState` split** [FLAGGED medium — decisión arquitectural pendiente]: store Zustand existe con persist localStorage + lógica carrito completa, pero `apps/web/src/app/pos/page.tsx` usa `useState` local paralelo. Decidir antes de implementar: historial carrito, multi-sesión, persist resume tras reload. Opciones: (a) migrar todo a Zustand, (b) eliminar Zustand y declarar `useState` único, (c) split formal (Zustand solo persist, useState UI ephemeral). No tocado en polish — requiere input usuario.
+- **`usePosStore` (Zustand) vs `useState` split** [RESOLVED 2026-05-14]: consolidado a Zustand como single source of truth para state POS. `apps/web/src/hooks/use-pos-store.ts` reescrito con shape alineado a UI (`{product, quantity}`); slices: cart (items + addToCart/updateQuantity/removeItem/clearCart), session (customerId/vehicleId/branchId), payment (paymentOpen/paymentMethod/bridgeStatus). `apps/web/src/app/pos/page.tsx`, `cart-panel.tsx`, `product-grid.tsx`, `payment-modal.tsx` consumen store directo, sin props drilling. `persist` middleware con `partialize` persiste solo cart+session (no UI ephemeral). `useState` solo en `product-grid.tsx` para filtros UI locales (search, activeCategory). Specs: `use-pos-store.test.ts` (13 tests), `payment-modal.test.tsx` actualizado para consumir store.
 - **Sales API atomic POST** [FIXED 2026-05-14]: `apps/web/src/app/api/sales/route.ts` POST ahora envuelve insert `sales` + bulk insert `sale_lines` + decrement `inventory` (UPDATE ... WHERE quantity >= qty, verifica 1 row affected) en `db.transaction`. Stock insuficiente → 409 + rollback completo. Driver migrado de `drizzle-orm/neon-http` → `drizzle-orm/neon-serverless` (Pool) porque neon-http no soporta multi-statement tx. Schema Drizzle extendido con `saleLines` (tabla SQL ya existía en `supabase/migrations/0001_schema.sql`). Specs cobertura: happy path + insufficient stock first/second line + validation 400 + db error propagation.
 - **ESLint config** agregado `eslint.config.mjs` en `apps/web/` (2026-05-07 polish).
 - **`as any` en product-card.tsx**: removido 2026-05-14, tipado via `BadgeProps["variant"]`.
@@ -222,7 +222,8 @@ Proyecto Vercel: `agrimmincks-projects/basilisk-car-shop-app` (`prj_jhgngSn47MQ1
 - product-card.tsx: `stockVariant` tipado con `BadgeProps["variant"]`, eliminado `as any`.
 - Docs sincronizado con código real (deps + operationId).
 - Bridge code core NO tocado (hardware untested per regla).
-- Flagged: Zustand/useState split (medium). Sales POST atomic inventory: FIXED 2026-05-14.
+- Sales POST atomic inventory: FIXED.
+- Zustand consolidation: APPLIED — single source of truth POS state. useState paralelo eliminado en page/cart-panel/payment-modal. Store reescrito con shape `{product, quantity}` alineado a UI + slices session/payment. Specs `use-pos-store.test.ts` agregadas (13 tests).
 
 ## Estado
 

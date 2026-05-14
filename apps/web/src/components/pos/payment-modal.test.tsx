@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { PaymentModal } from "./payment-modal";
+import { usePosStore } from "../../hooks/use-pos-store";
 
 // Stub framer-motion: motion.<tag> → real <tag>, drop framer-only props,
 // AnimatePresence → passthrough. Keeps DOM assertions deterministic.
@@ -37,23 +38,48 @@ vi.mock("framer-motion", async () => {
   };
 });
 
-function setup(overrides: Partial<Parameters<typeof PaymentModal>[0]> = {}) {
-  const onConfirm = vi.fn();
-  const onOpenChange = vi.fn();
-  const utils = render(
-    <PaymentModal
-      open={true}
-      total={5000}
-      onConfirm={onConfirm}
-      onOpenChange={onOpenChange}
-      {...overrides}
-    />
-  );
-  return { ...utils, onConfirm, onOpenChange };
+function seedCart(total = 5000) {
+  act(() => {
+    usePosStore.setState({
+      items: [
+        {
+          product: {
+            id: "p1",
+            name: "Test",
+            price: total,
+            stock: 10,
+            categoryId: "filtros",
+          },
+          quantity: 1,
+        },
+      ],
+      paymentMethod: "cash",
+      bridgeStatus: "idle",
+    });
+  });
 }
 
-describe("PaymentModal — state transitions", () => {
-  it("renders total and cash selected by default (bridge hidden)", () => {
+function setup(overrides: Partial<Parameters<typeof PaymentModal>[0]> = {}) {
+  const onOpenChange = vi.fn();
+  const utils = render(
+    <PaymentModal open={true} onOpenChange={onOpenChange} {...overrides} />
+  );
+  return { ...utils, onOpenChange };
+}
+
+describe("PaymentModal — Zustand-driven state", () => {
+  beforeEach(() => {
+    act(() => {
+      usePosStore.setState({
+        items: [],
+        paymentMethod: "cash",
+        bridgeStatus: "idle",
+      });
+    });
+  });
+
+  it("renders total from store and cash selected by default (bridge hidden)", () => {
+    seedCart(5000);
     setup();
 
     expect(screen.getByText("Pago")).toBeInTheDocument();
@@ -62,6 +88,7 @@ describe("PaymentModal — state transitions", () => {
   });
 
   it("idle → connecting → connected when selecting debit", async () => {
+    seedCart();
     const user = userEvent.setup();
     setup();
 
@@ -69,7 +96,6 @@ describe("PaymentModal — state transitions", () => {
 
     expect(screen.getByText(/conectando/i)).toBeInTheDocument();
 
-    // Real timer: setTimeout(1200) — waitFor polls up to 3s by default
     await waitFor(
       () => expect(screen.getByText(/transbank conectado/i)).toBeInTheDocument(),
       { timeout: 3000 }
@@ -78,6 +104,7 @@ describe("PaymentModal — state transitions", () => {
   });
 
   it("confirm button disabled while connecting, enabled when connected", async () => {
+    seedCart();
     const user = userEvent.setup();
     setup();
 
@@ -88,17 +115,19 @@ describe("PaymentModal — state transitions", () => {
     await waitFor(() => expect(confirmBtn).toBeEnabled(), { timeout: 3000 });
   });
 
-  it("confirm with cash bypasses bridge; calls onConfirm + closes modal", async () => {
+  it("confirm with cash clears cart in store and closes modal", async () => {
+    seedCart(5000);
     const user = userEvent.setup();
-    const { onConfirm, onOpenChange } = setup();
+    const { onOpenChange } = setup();
 
     await user.click(screen.getByRole("button", { name: /confirmar pago/i }));
 
-    expect(onConfirm).toHaveBeenCalledWith("cash");
+    expect(usePosStore.getState().items).toEqual([]);
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it("switching from debit back to cash hides bridge panel and re-enables confirm", async () => {
+    seedCart();
     const user = userEvent.setup();
     setup();
 
@@ -111,13 +140,14 @@ describe("PaymentModal — state transitions", () => {
     expect(screen.getByRole("button", { name: /confirmar pago/i })).toBeEnabled();
   });
 
-  it("cancel button triggers onOpenChange(false) without onConfirm", async () => {
+  it("cancel button triggers onOpenChange(false) without clearing cart", async () => {
+    seedCart(5000);
     const user = userEvent.setup();
-    const { onConfirm, onOpenChange } = setup();
+    const { onOpenChange } = setup();
 
     await user.click(screen.getByRole("button", { name: /cancelar/i }));
 
-    expect(onConfirm).not.toHaveBeenCalled();
+    expect(usePosStore.getState().items.length).toBe(1);
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 });

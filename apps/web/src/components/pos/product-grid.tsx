@@ -2,21 +2,18 @@
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PosProduct } from "./types";
 import { ProductCard } from "./product-card";
 import { CategoryFilter } from "./category-filter";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, ScanBarcode } from "lucide-react";
 import { mockProducts, mockCategories } from "./mock-data";
+import { usePosStore } from "@/hooks/use-pos-store";
 
-interface ProductGridProps {
-  onAddToCart: (product: PosProduct) => void;
-}
-
-export function ProductGrid({ onAddToCart }: ProductGridProps) {
+export function ProductGrid() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const addToCart = usePosStore((s) => s.addToCart);
 
   const filtered = useMemo(() => {
     return mockProducts.filter((p) => {
@@ -63,7 +60,7 @@ export function ProductGrid({ onAddToCart }: ProductGridProps) {
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ duration: 0.2 }}
               >
-                <ProductCard product={product} onAdd={onAddToCart} />
+                <ProductCard product={product} onAdd={addToCart} />
               </motion.div>
             ))}
           </AnimatePresence>

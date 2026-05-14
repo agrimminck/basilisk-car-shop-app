@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PaymentMethod } from "./types";
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -8,12 +8,11 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Banknote, CreditCard, Smartphone, Wifi, WifiOff, CheckCircle2, Loader2 } from "lucide-react";
+import { usePosStore } from "@/hooks/use-pos-store";
 
 interface PaymentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  total: number;
-  onConfirm: (method: PaymentMethod) => void;
 }
 
 const methods: { id: PaymentMethod; label: string; icon: React.ElementType }[] = [
@@ -23,25 +22,34 @@ const methods: { id: PaymentMethod; label: string; icon: React.ElementType }[] =
   { id: "transfer", label: "Transferencia", icon: Smartphone },
 ];
 
-export function PaymentModal({ open, onOpenChange, total, onConfirm }: PaymentModalProps) {
-  const [selected, setSelected] = useState<PaymentMethod>("cash");
-  const [bridgeStatus, setBridgeStatus] = useState<"idle" | "connecting" | "connected" | "error">("idle");
+export function PaymentModal({ open, onOpenChange }: PaymentModalProps) {
+  const selected = usePosStore((s) => s.paymentMethod);
+  const bridgeStatus = usePosStore((s) => s.bridgeStatus);
+  const setPaymentMethod = usePosStore((s) => s.setPaymentMethod);
+  const setBridgeStatus = usePosStore((s) => s.setBridgeStatus);
+  const clearCart = usePosStore((s) => s.clearCart);
+  const total = usePosStore((s) =>
+    s.items.reduce((sum, i) => sum + i.product.price * i.quantity, 0)
+  );
 
-  const handleSelect = (method: PaymentMethod) => {
-    setSelected(method);
-    if (method === "debit" || method === "credit") {
+  useEffect(() => {
+    if (selected === "debit" || selected === "credit") {
       setBridgeStatus("connecting");
-      setTimeout(() => {
+      const t = setTimeout(() => {
         setBridgeStatus("connected");
       }, 1200);
-    } else {
-      setBridgeStatus("idle");
+      return () => clearTimeout(t);
     }
+    setBridgeStatus("idle");
+    return undefined;
+  }, [selected, setBridgeStatus]);
+
+  const handleSelect = (method: PaymentMethod) => {
+    setPaymentMethod(method);
   };
 
   const handleConfirm = () => {
-    onConfirm(selected);
-    setBridgeStatus("idle");
+    clearCart();
     onOpenChange(false);
   };
 

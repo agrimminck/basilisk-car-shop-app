@@ -1,133 +1,131 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { CartItem, PaymentMethod, PosProduct } from "../components/pos/types";
 
-export type CartItemType = "product" | "service" | "bundle";
-
-export interface CartItem {
-  id: string;
-  type: CartItemType;
-  name: string;
-  variantName?: string;
-  quantity: number;
-  unitPrice: number;
-  totalLine: number;
-}
-
-export type CartStatus = "open" | "checking_out" | "paid" | "cancelled";
+export type BridgeStatus = "idle" | "connecting" | "connected" | "error";
 
 export interface PosState {
   items: CartItem[];
   customerId: string | null;
   vehicleId: string | null;
-  discountAmount: number;
-  status: CartStatus;
+  branchId: string | null;
+  paymentOpen: boolean;
+  paymentMethod: PaymentMethod;
+  bridgeStatus: BridgeStatus;
 }
 
 export interface PosActions {
-  addItem: (item: CartItem) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  setCustomer: (customerId: string | null, vehicleId?: string | null) => void;
-  setDiscount: (amount: number) => void;
+  addToCart: (product: PosProduct) => void;
+  updateQuantity: (productId: string, delta: number) => void;
+  removeItem: (productId: string) => void;
   clearCart: () => void;
-  getSubtotal: () => number;
+  setCustomer: (customerId: string | null, vehicleId?: string | null) => void;
+  setBranch: (branchId: string | null) => void;
+  setPaymentOpen: (open: boolean) => void;
+  setPaymentMethod: (method: PaymentMethod) => void;
+  setBridgeStatus: (status: BridgeStatus) => void;
   getTotal: () => number;
+  getItemCount: () => number;
 }
 
 const initialState: PosState = {
   items: [],
   customerId: null,
   vehicleId: null,
-  discountAmount: 0,
-  status: "open",
+  branchId: null,
+  paymentOpen: false,
+  paymentMethod: "cash",
+  bridgeStatus: "idle",
 };
-
-function calculateLineTotal(item: CartItem): number {
-  return item.quantity * item.unitPrice;
-}
 
 export const usePosStore = create<PosState & PosActions>()(
   persist(
     (set, get) => ({
       ...initialState,
 
-      addItem: (item) => {
-        const state = get();
-        const existingIndex = state.items.findIndex(
-          (i) => i.id === item.id && i.type === item.type
-        );
-
-        if (existingIndex >= 0) {
-          const updatedItems = state.items.map((i, index) => {
-            if (index === existingIndex) {
-              const newQuantity = i.quantity + item.quantity;
-              return {
-                ...i,
-                quantity: newQuantity,
-                totalLine: newQuantity * i.unitPrice,
-              };
-            }
-            return i;
+      addToCart: (product) => {
+        const { items } = get();
+        const existing = items.find((i) => i.product.id === product.id);
+        if (existing) {
+          set({
+            items: items.map((i) =>
+              i.product.id === product.id
+                ? { ...i, quantity: i.quantity + 1 }
+                : i
+            ),
           });
-          set({ items: updatedItems });
         } else {
-          const newItem: CartItem = {
-            ...item,
-            totalLine: calculateLineTotal(item),
-          };
-          set({ items: [...state.items, newItem] });
+          set({ items: [...items, { product, quantity: 1 }] });
         }
       },
 
-      removeItem: (id) => {
-        const state = get();
-        set({ items: state.items.filter((i) => i.id !== id) });
+      updateQuantity: (productId, delta) => {
+        const { items } = get();
+        set({
+          items: items
+            .map((i) =>
+              i.product.id === productId
+                ? { ...i, quantity: i.quantity + delta }
+                : i
+            )
+            .filter((i) => i.quantity > 0),
+        });
       },
 
-      updateQuantity: (id, quantity) => {
-        if (quantity < 1) return;
-        const state = get();
-        const updatedItems = state.items.map((i) => {
-          if (i.id === id) {
-            return {
-              ...i,
-              quantity,
-              totalLine: quantity * i.unitPrice,
-            };
-          }
-          return i;
+      removeItem: (productId) => {
+        const { items } = get();
+        set({ items: items.filter((i) => i.product.id !== productId) });
+      },
+
+      clearCart: () => {
+        set({
+          items: [],
+          paymentMethod: "cash",
+          bridgeStatus: "idle",
         });
-        set({ items: updatedItems });
       },
 
       setCustomer: (customerId, vehicleId) => {
         set({ customerId, vehicleId: vehicleId ?? null });
       },
 
-      setDiscount: (amount) => {
-        set({ discountAmount: Math.max(0, amount) });
+      setBranch: (branchId) => {
+        set({ branchId });
       },
 
-      clearCart: () => {
-        set(initialState);
+      setPaymentOpen: (open) => {
+        set({ paymentOpen: open });
       },
 
-      getSubtotal: () => {
-        const state = get();
-        return state.items.reduce((sum, item) => sum + item.totalLine, 0);
+      setPaymentMethod: (method) => {
+        set({ paymentMethod: method });
+      },
+
+      setBridgeStatus: (status) => {
+        set({ bridgeStatus: status });
       },
 
       getTotal: () => {
-        const state = get();
-        const subtotal = state.items.reduce(
-          (sum, item) => sum + item.totalLine,
+        const { items } = get();
+        return items.reduce(
+          (sum, i) => sum + i.product.price * i.quantity,
           0
         );
-        return Math.max(0, subtotal - state.discountAmount);
+      },
+
+      getItemCount: () => {
+        const { items } = get();
+        return items.reduce((sum, i) => sum + i.quantity, 0);
       },
     }),
     {
       name: "basilisk-pos-cart",
+      partialize: (state) => ({
+        items: state.items,
+        customerId: state.customerId,
+        vehicleId: state.vehicleId,
+        branchId: state.branchId,
+      }),
     }
   )
 );
