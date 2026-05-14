@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { PosProduct } from "./types";
-import { Badge } from "@/components/ui/badge";
+import { Badge, type BadgeProps } from "@/components/ui/badge";
 import { Droplets, Filter, CircleDot, Battery, Circle, Wrench, FlaskConical, Settings } from "lucide-react";
 
 const categoryIcon: Record<string, React.ElementType> = {
@@ -30,7 +30,8 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onAdd }: ProductCardProps) {
   const stockLabel = product.stock > 20 ? "alto" : product.stock > 5 ? "medio" : "bajo";
-  const stockVariant = stockLabel === "alto" ? "success" : stockLabel === "medio" ? "warning" : "destructive";
+  const stockVariant: BadgeProps["variant"] =
+    stockLabel === "alto" ? "success" : stockLabel === "medio" ? "warning" : "destructive";
 
   const Icon = categoryIcon[product.categoryId] ?? FlaskConical;
   const gradient = categoryGradient[product.categoryId] ?? "from-muted to-background";
@@ -56,7 +57,7 @@ export function ProductCard({ product, onAdd }: ProductCardProps) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
         <div className="absolute right-2 top-2">
-          <Badge variant={stockVariant as any} className="backdrop-blur-md">
+          <Badge variant={stockVariant} className="backdrop-blur-md">
             {product.stock > 20 ? "Stock" : product.stock > 5 ? `${product.stock}` : `Bajo: ${product.stock}`}
           </Badge>
         </div>
